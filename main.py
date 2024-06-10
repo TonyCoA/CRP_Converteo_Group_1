@@ -34,7 +34,7 @@ class MultiApp:
             app = option_menu(
                 menu_title='Reputation Analysis Tool',
                 # Names of the pages in the menu
-                options=['Repuation & Sentiment', 'Brand KPIs'],
+                options=['Reputation & Sentiment', 'Brand KPIs'],
                          #, 'Competitors Info'],
                 # Icons of the pages
                 icons=['person-circle', 'trophy-fill'],

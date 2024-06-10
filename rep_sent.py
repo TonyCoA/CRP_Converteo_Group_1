@@ -155,8 +155,9 @@ def app():
         return ((value + 1) / 2) * 100
 
     # Define function to generate word cloud
-    def generate_wordcloud(text):
-        wordcloud = WordCloud(width=800, height=400, background_color='white', colormap='viridis', stopwords=STOPWORDS).generate(text)
+    def generate_wordcloud(text, color_func=None):
+        wordcloud = WordCloud(width=800, height=400, background_color='white', colormap='viridis',
+                            stopwords=STOPWORDS, color_func=color_func).generate(text)
         plt.figure(figsize=(10, 5))
         plt.imshow(wordcloud, interpolation='bilinear')
         plt.axis('off')
@@ -174,7 +175,7 @@ def app():
             words = [word for word in words if word not in stop_words]
             return ' '.join(words)
         return ''
-
+        
     # Download stopwords if not already done
     nltk.download('stopwords')
     nltk.download('punkt')
@@ -385,8 +386,24 @@ def app():
 
         # Extract text
         data['cleaned_text'] = filtered_df['Text'].apply(clean_text)
+
+##################
+        # Preprocess text and calculate tone for each word
+        #text_data = filtered_merged_df[['Text', 'Tone']]
+        #text_data = text_data.dropna(subset=['Text', 'Tone'])  # Drop rows with missing 'Text' or 'Tone'
+
+        
+        
+        # Generate word cloud with tone coloring
+        #text = ' '.join(text_data['Text'].tolist())
+        #generate_wordcloud(text, color_func=color_func)
+
+
+##################
+ 
         # Generate word cloud for keywords
         keywords_text = ' '.join(data['cleaned_text'].dropna().astype(str))
+        #generate_wordcloud(keywords_text)
         generate_wordcloud(keywords_text)
     
     with row4_2:
@@ -414,7 +431,7 @@ def app():
             text = row['Text']
             author = row['Author']
             st.markdown(f"""
-                <div style='padding: 10px; border: 1px solid lightblue; margin: 5px 0; border-radius: 5px; background-color: #f9f9f9; color: black; height: 170px;'>
+                <div style='padding: 10px; border: 1px solid lightblue; margin: 5px 0; border-radius: 5px; background-color: #f9f9f9; color: black; height: 190px;'>
                     <p style='color: lightblue;'><strong>@{author}</strong></p>
                     <p>{text}</p>
                 </div>
@@ -436,7 +453,7 @@ def app():
             text = row['Text']
             author = row['Author']
             st.markdown(f"""
-                <div style='padding: 10px; border: 1px solid lightblue; margin: 5px 0; border-radius: 5px; background-color: #f9f9f9; color: black; height: 170px;'>
+                <div style='padding: 10px; border: 1px solid lightblue; margin: 5px 0; border-radius: 5px; background-color: #f9f9f9; color: black; height: 190px;'>
                     <p style='color: lightblue;'><strong>@{author}</strong></p>
                     <p>{text}</p>
                 </div>

@@ -128,7 +128,7 @@ def app():
 
     #Pagina 1
     #1x1
-        #1.1 Period Filter (Day, Week, Year)
+        #1.1 Period Filter 
     #1x3
         #2.1 KPI - Interaction 
         #2.2 KPI - Egagement Actions
@@ -202,15 +202,17 @@ def app():
             past_start_date = start_date - pd.DateOffset(weeks=selected_range_value)
         elif selected_period == 'Month':
             past_start_date = start_date - pd.DateOffset(months=selected_range_value)
-        elif selected_period == 'Year':
-            past_start_date = start_date - pd.Timedelta(years=selected_range_value)
         ##### --- CHECK Trimester
+        elif selected_period == 'Year':
+            past_start_date = start_date - pd.DateOffset(years=selected_range_value)
+        
 
         # Filter the DataFrame for the past period
         past_filtered_df = df[(df['Date'] >= past_start_date) & (df['Date'] < start_date)]
 
     with row1_4:
         print("")
+        #st.write(past_start_date)
 
     row2_1, row2_2, row2_3 = st.columns([1, 1, 1])
     with row2_1:
@@ -535,29 +537,60 @@ def app():
     with row6_2:
         print("")
 
-
+#################################3
     # Streamlit plotting
-    st.set_option('deprecation.showPyplotGlobalUse', False)
+    #st.set_option('deprecation.showPyplotGlobalUse', False)
 
-    fig, ax1 = plt.subplots()
+    #fig, ax1 = plt.subplots()
 
     # Plot reputation on primary y-axis
-    ax1.plot(merged_df_2['Date'], merged_df_2['Scaled_Reputation'], 'b-', label='Reputation')
-    ax1.set_xlabel('Date')
-    ax1.set_ylabel('Reputation', color='b')
-    ax1.tick_params(axis='y', labelcolor='b')
+    #ax1.plot(merged_df_2['Date'], merged_df_2['Scaled_Reputation'], 'b-', label='Reputation')
+    #ax1.set_xlabel('Date')
+    #ax1.set_ylabel('Reputation', color='b')
+    #ax1.tick_params(axis='y', labelcolor='b')
 
     # Create secondary y-axis for stock price
-    ax2 = ax1.twinx()
-    ax2.plot(merged_df_2['Date'], merged_df_2['Stock Price'], 'r-', label='Stock Price')
-    ax2.set_ylabel('Stock Price', color='r')
-    ax2.tick_params(axis='y', labelcolor='r')
+    #ax2 = ax1.twinx()
+    #ax2.plot(merged_df_2['Date'], merged_df_2['Stock Price'], 'r-', label='Stock Price')
+    #ax2.set_ylabel('Stock Price', color='r')
+    #ax2.tick_params(axis='y', labelcolor='r')
 
     # Add a title and show the plot
-    plt.title('Reputation and Stock Price Over Time')
-    fig.tight_layout()
+    #plt.title('Reputation and Stock Price Over Time')
+    #fig.tight_layout()
 
-    st.pyplot(fig)
+    #st.pyplot(fig)
+
+
+
+
+    # Altair chart for Reputation
+    #base = alt.Chart(merged_df_2).encode(
+    #    x='Date:T'
+    #)
+
+    #line1 = base.mark_line(color='blue').encode(
+    #    y=alt.Y('Scaled_Reputation:Q', axis=alt.Axis(title='Reputation'))
+    #)
+
+    # Altair chart for Stock Price
+    #line2 = base.mark_line(color='red').encode(
+    #    y=alt.Y('Stock Price:Q', axis=alt.Axis(title='Stock Price', titleColor='red'))
+    #)
+
+    # Combine the two charts
+    #chart = alt.layer(line1, line2).resolve_scale(
+    #    y='independent'
+    #).properties(
+    #    title='Reputation and Stock Price Over Time',
+    #    width=600,
+    #    height=400
+    #)
+
+    # Display the chart in Streamlit
+    #st.altair_chart(chart, use_container_width=True)
+
+
 
 if __name__ == "__main__":
     app()
