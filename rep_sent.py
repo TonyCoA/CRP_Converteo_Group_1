@@ -267,7 +267,6 @@ def app():
         st.subheader("Reputation Indicator")
     
         # Calculate the reputation Indicator scores
-        ####### -- SHOULD I DELETE THE FIRST VARIABLE?
         totalenergies_overall_reputation, totalenergies_daily_reputation = calculate_reputation_scores(combined_data, 'TotalEnergies')
         
         # Group by the date part and calculate the mean of 'Compound_Sentiment_Score'
@@ -314,11 +313,7 @@ def app():
 
         # Calculate the average values
         avg_reputation = data1_2.mean()
-        ##### --- CHECK
-        #average_scaled_reputation
         avg_sentiment = data2_2.mean()
-        ##### --- CHECK
-        #average_scaled_sentiment
 
         # Define the color scale
         color_scale_1 = alt.Scale(
