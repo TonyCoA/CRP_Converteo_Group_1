@@ -94,7 +94,7 @@ def app():
             **{'config':config}
         )
 
-    # Define function to calculate reputation score 
+    # Define function to calculate reputation Indicator 
     def calculate_reputation_scores(data, query_name,window=7):
         overall_posk = 0
         overall_negk = 0
@@ -208,26 +208,25 @@ def app():
     #Pagina 1
     #1x3
         #1.1 Date Filter para grafica Score-Rep
-        #1.2. Gauge chart Reputation Score
-        #1.3. Gauge chart Net Sentiment
+        #1.2. Gauge chart Reputation Indicator
+        #1.3. Gauge chart Sentiment Value
     #1x1
         #2.1 Line Chart Reputation - Sentiment
-    #1x2
-        #3.1 title "Explanation of Reputation Score"
-        #3.2 Date filter for keywords
+    #1x1
+        #3.1 title "Explanation of Reputation Indicator"
     #1x2
         #4.1 Main Keywords
         #4.2 Main Hashtags
     #1x2
-        #5.1 Top + Relevant Tweets
-        #5.2 Top - Relevant Tweets
+        #5.1 Top + Relevant Posts
+        #5.2 Top - Relevant Posts
 
 
     # Main Panel 1
     st.title("Reputation & Sentiment")
 
     row1_1, row1_2, row1_3, row1_4, row1_5 = st.columns([0.4, 0.2, 0.5, 0.2, 0.5])
-    with row1_1:        # Filtro para grafica Score-Rep
+    with row1_1:        # Filter Score-Rep plot
         # Initialize session state for start and end dates
         if 'start_date' not in st.session_state:
             st.session_state['start_date'] = pd.Timestamp.now().to_period('Y').start_time
@@ -263,25 +262,21 @@ def app():
         print("")
 
     with row1_3:
-        # Gauge chart Reputation Score Title
-        st.subheader("Reputation Score")
+        # Gauge chart Reputation Indicator Title
+        st.subheader("Reputation Indicator")
     
-        ###33333333333333333333333333333
-        # Calculate the reputation scores
+        # Calculate the reputation Indicator scores
+        ####### -- SHOULD I DELETE THE FIRST VARIABLE?
         totalenergies_overall_reputation, totalenergies_daily_reputation = calculate_reputation_scores(combined_data, 'TotalEnergies')
-        chevron_overall_reputation, chevron_daily_reputation = calculate_reputation_scores(combined_data, 'Chevron')
-
-        ###33333333333333333333333333333
-        # Step 3: Group by the date part and calculate the mean of 'Compound_Sentiment_Score'
+        
+        # Group by the date part and calculate the mean of 'Compound_Sentiment_Score'
         average_scores = data.groupby('Date_Only')['Compound_Sentiment_Score'].mean().reset_index()
 
-        # Step 4: Rename columns for clarity (optional)
+        # Rename columns for clarity (optional)
         average_scores.columns = ['Date', 'Average_Compound_Sentiment_Score']
 
-        ###33333333333333333333333333333
         merged_df = pd.merge(totalenergies_daily_reputation, average_scores, on='Date', how='left')
 
-        ###33333333333333333333333333333
         # Apply the function to the 'Reputation' and 'Average_Compound_Sentiment_Score' columns
         merged_df['Scaled_Reputation'] = merged_df['Reputation'].apply(scale_to_100)
         merged_df['Scaled_Average_Compound_Sentiment_Score'] = merged_df['Average_Compound_Sentiment_Score'].apply(scale_to_100)
@@ -289,7 +284,7 @@ def app():
 
         filtered_merged_df = merged_df[(merged_df['Date'] >= pd.to_datetime(st_dt)) & (merged_df['Date'] <= pd.to_datetime(end_dt))]
 
-        # Gauge chart Reputation Score
+        # Gauge chart Reputation Indicator
         average_scaled_reputation = filtered_merged_df['Scaled_Reputation'].mean()      # Average of Reputation
         gauge(average_scaled_reputation)   
         
@@ -297,8 +292,8 @@ def app():
         print("")
 
     with row1_5:
-        # Gauge chart Net Sentiment
-        st.subheader("Net Sentiment")
+        # Gauge chart Sentiment Value
+        st.subheader("Sentiment Value")
         average_scaled_sentiment = filtered_merged_df['Scaled_Average_Compound_Sentiment_Score'].mean()      # Average of Sentiment 
         gauge(average_scaled_sentiment)   
    
@@ -307,25 +302,27 @@ def app():
     with row2_1:
         st.subheader("Reputation & Sentiment")
 
-        # Values from datasets -- capacidad maxima de 3 meses       
+        # Values from datasets        
         dates = filtered_merged_df['Date']
         data1_2 = filtered_merged_df['Scaled_Reputation']
         data2_2 = filtered_merged_df['Scaled_Average_Compound_Sentiment_Score']
 
-        df_x = pd.DataFrame({'Date': dates, 'Reputation Score': data1_2, 'Sentiment Score': data2_2})
+        df_x = pd.DataFrame({'Date': dates, 'Reputation Indicator': data1_2, 'Sentiment Value': data2_2})
         # Melt the DataFrame to long format
         df_melted = df_x.melt('Date', var_name='Series', value_name='Score')
 
         # Calculate the average values
         avg_reputation = data1_2.mean()
+        ##### --- CHECK
         #average_scaled_reputation
         avg_sentiment = data2_2.mean()
+        ##### --- CHECK
         #average_scaled_sentiment
 
         # Define the color scale
         color_scale_1 = alt.Scale(
-            domain=['Reputation Score', 'Sentiment Score'],
-            range=['#2C73D2', '#c72118']  # Both series will be green
+            domain=['Reputation Indicator', 'Sentiment Value'],
+            range=['#2C73D2', '#c72118']  # Series color
         )
 
         # Create Altair line chart with custom colors
@@ -367,25 +364,16 @@ def app():
         # Combine the original line chart and the average lines
         combined_chart = line_chart + average_reputation + average_sentiment
         st.altair_chart(combined_chart, use_container_width=True)
-        
-        #st.altair_chart(line_chart, use_container_width=True)
 
     with row2_2:
         print("")
 
 
-    row3_1, row3_2, row3_3 = st.columns([1, 0.1, 0.1])
+    row3_1, row3_2 = st.columns([1, 0.1])
     with row3_1:
-        st.header("Explanation of Reputation Score")        # title "Explanation of Reputation Score"
+        st.header("Explanation of Reputation Indicator")        # title "Explanation of Reputation Indicator"
 
-    with row3_2:    # Date filter for keywords
-        # Date input for selecting the start 
-        #st_dt = st.date_input("Start date", value=default_start_date, min_value=min_date_start, max_value=max_date_start, key=3)
-        print("")
-
-    with row3_3:    # Date filter for keywords
-        # Date input for selecting the end dates
-        #end_dt = st.date_input("End date", value=default_end_date, min_value=min_date_end, max_value=max_date_end, key=4)
+    with row3_2:    
         print("")
 
 
@@ -414,7 +402,7 @@ def app():
 
     row5_1, row5_2, row5_3 = st.columns([0.9, 0.1, 0.9])
     with row5_1:
-        st.subheader("Top Relevant Positive Tweets")
+        st.subheader("Top Relevant Positive Posts")
         # Filter the DataFrame to only include rows where 'Tone' is 'positive'
         positive_tweets = filtered_df[filtered_df['Tone'] == 'positive']
         
@@ -436,7 +424,7 @@ def app():
         print("")
     
     with row5_3:
-        st.subheader("Top Relevant Negative Tweets")
+        st.subheader("Top Relevant Negative Posts")
         # Filter the DataFrame to only include rows where 'Tone' is 'positive'
         negative_tweets = filtered_df[filtered_df['Tone'] == 'negative']
         

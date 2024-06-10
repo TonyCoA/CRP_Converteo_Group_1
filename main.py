@@ -44,7 +44,7 @@ class MultiApp:
             )
 
         # Link the name of the page with the corresponding .py file
-        if app == "Repuation & Sentiment":
+        if app == "Reputation & Sentiment":
             rep_sent.app()
         if app == "Brand KPIs":
             brand_kpi.app()

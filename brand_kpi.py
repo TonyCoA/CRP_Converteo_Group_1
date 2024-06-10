@@ -18,15 +18,13 @@ def app():
     # Combine TE and Chevron
     combined_data = pd.concat([data, data2], ignore_index=True)
 
-    # Basic Graphs (Introduction)
-    st.title("Brand KPIs")
-
     ##############################################################
     # FUNCTIONS
-    # Function to get the date range options based on the selected period
+    # Define function to get the date range options based on the selected period
     def get_date_range_options(selected_period):
         return list(date_mapping[selected_period].keys())
 
+    # Define function to format numbers
     def format_number(num): 
         if abs(num) >= 1000000:
             return f"{num / 100000:.2f}M"
@@ -34,10 +32,11 @@ def app():
             return f"{num / 1000:.2f}K"
         return str(num)
 
+    # Define function to count mentions
     def count_mentions(mention_series):
         return mention_series.apply(lambda x: len(x.split(';')) if pd.notna(x) else 0).sum()
 
-    ###33333333333333333333333333333
+    # Define function to calculate reputation scores
     def calculate_reputation_scores(data, query_name,window=7):
         overall_posk = 0
         overall_negk = 0
@@ -97,7 +96,7 @@ def app():
     def scale_to_100(value):
         return ((value + 1) / 2) * 100
 
-
+    ##### --- CHECK
     # Default values for start and end dates
     default_start_date = pd.Timestamp.now().to_period('Y').start_time
     default_end_date = pd.Timestamp.now()
@@ -109,7 +108,6 @@ def app():
     min_date_start = pd.Timestamp('2022-01-01')
     max_date_start = pd.Timestamp.now() - pd.Timedelta(days=1)
 
-    ###33333333333333333333333333333
     # Change the date to datetime
     combined_data['Date'] = pd.to_datetime(combined_data['Date'])
     # Change the date to datetime for data of TE
@@ -148,9 +146,11 @@ def app():
 
 
     # Main Panel 1
+    # Basic Graphs (Introduction)
+    st.title("Brand KPIs")
+    
     row1_1, row1_2, row1_3, row1_4 = st.columns([0.3, 0.6, 0.3, 0.6])
     with row1_1:
-        #st.subheader("Period Filter")
         # Define the period list and default selected period
         period_list = ['Week','Month', 'Trimester', 'Year']
         selected_period = st.selectbox('Select the period', period_list, index=0)  # Default to 'Day'
@@ -172,8 +172,11 @@ def app():
         # Retrieve the value from the date_mapping based on the selected range
         selected_range_value = date_mapping[selected_period][selected_range]
 
+        ##### --- CHECK
         # Get today's date and normalize it to the start of the day
         now = pd.Timestamp.now()
+        
+        ##### --- CHECK
         #today = pd.Timestamp.today().normalize()
         today = pd.Timestamp('2024-03-27')
         end_today = pd.Timestamp('2024-03-27 23:59:59')
@@ -201,6 +204,7 @@ def app():
             past_start_date = start_date - pd.DateOffset(months=selected_range_value)
         elif selected_period == 'Year':
             past_start_date = start_date - pd.Timedelta(years=selected_range_value)
+        ##### --- CHECK Trimester
 
         # Filter the DataFrame for the past period
         past_filtered_df = df[(df['Date'] >= past_start_date) & (df['Date'] < start_date)]
@@ -212,8 +216,9 @@ def app():
     with row2_1:
         total_likes = filtered_df['X Likes'].sum()      # Calculate the sum of likes for the selected period
         past_total_likes = past_filtered_df['X Likes'].sum()        # Calculate the sum of likes for the past period
+        
+        ##### --- CHECK
         delta_likes = total_likes - past_total_likes        # Calculate the difference in likes
-        #per_delta_likes = round(((total_likes - past_total_likes) / past_total_likes) * 100)
         per_delta_likes = int(((total_likes - past_total_likes) / total_likes) * 100)
         
         st.metric(label='Interaction (Likes)', value=format_number(total_likes), delta=f'{per_delta_likes}%')
@@ -221,6 +226,8 @@ def app():
     with row2_2:
         total_eng = filtered_df['Engagement Actions'].sum()      # Calculate the sum of likes for the selected period
         past_total_eng = past_filtered_df['Engagement Actions'].sum()        # Calculate the sum of likes for the past period
+        
+        ##### --- CHECK
         delta_eng = total_eng - past_total_eng        # Calculate the difference in likes
         per_delta_eng = int(((total_eng - past_total_eng) / total_eng) * 100)
 
@@ -332,7 +339,7 @@ def app():
         st.subheader("Reputation & Stock Price")
         
         ###33333333333333333333333333333
-        # Calculate the reputation scores
+        # Calculate the reputation indicator scores
         totalenergies_overall_reputation, totalenergies_daily_reputation = calculate_reputation_scores(data, 'TotalEnergies')
         
         # Step 3: Group by the date part and calculate the mean of 'Compound_Sentiment_Score'
@@ -350,7 +357,7 @@ def app():
 
         filtered_merged_st = merged_df[(merged_df['Date'] >= pd.to_datetime(st_dt)) & (merged_df['Date'] <= pd.to_datetime(end_dt))]
 
-        # Gauge chart Reputation Score
+        # Gauge chart Reputation Indicator
         average_scaled_reputation = filtered_merged_st['Scaled_Reputation'].mean()      # Average of Reputation
            
 
@@ -379,19 +386,16 @@ def app():
         merged_df_2 = pd.merge(filtered_merged_st, stock_data_inter, on='Date', how='left')
 
 
+        ##### --- CHECK
         # Merge stock data with the filtered dataframe on the 'Date' column
         #filtered_df_ch = filtered_df_st.set_index('Date')
         #combined_df = filtered_df_st.join(stock_data, how='inner')
 
-        # Values from datasets -- capacidad maxima de 3 meses
-        #dates_st = filtered_df_st['Date']
+        # Values from datasets
         dates_st = merged_df_2['Date']
         data1_st = merged_df_2['Scaled_Reputation']
-        #data2_st = filtered_df_st['Stock Price']
         data2_st = merged_df_2['Stock Price']
-        df_x_st = pd.DataFrame({'Date': dates_st, 'Reputation Score': data1_st, 'Stock Price': data2_st})
-        
-        #df_x_st = pd.DataFrame({'Date': dates_st, 'Stock Price': data2_st})
+        df_x_st = pd.DataFrame({'Date': dates_st, 'Reputation Indicator': data1_st, 'Stock Price': data2_st})
         
         # Melt the DataFrame to long format
         df_melted_st = df_x_st.melt('Date', var_name='Series', value_name='Score')
@@ -401,7 +405,7 @@ def app():
 
         # Define the color scale
         color_scale_2 = alt.Scale(
-            domain=['Reputation Score', 'Stock Price'],
+            domain=['Reputation Indicator', 'Stock Price'],
             range=['#2C73D2', '#095c02']  
         )
 
@@ -471,7 +475,7 @@ def app():
         data1_2 = filtered_merged_st['Scaled_Reputation']
         data2_2 = filtered_merged_df2['Scaled_Reputation_2']
 
-        df_x = pd.DataFrame({'Date': dates, 'Total - Reputation Score': data1_2, 'Chevron - Reputation Score': data2_2})
+        df_x = pd.DataFrame({'Date': dates, 'Total - Reputation Indicator': data1_2, 'Chevron - Reputation Indicator': data2_2})
         # Melt the DataFrame to long format
         df_melted = df_x.melt('Date', var_name='Series', value_name='Score')
 
@@ -483,7 +487,7 @@ def app():
 
         # Define the color scale
         color_scale_3 = alt.Scale(
-            domain=['Total - Reputation Score', 'Chevron - Reputation Score'],
+            domain=['Total - Reputation Indicator', 'Chevron - Reputation Indicator'],
             range=['#2C73D2', '#c72118']  # Both series will be green
         )
 
@@ -528,11 +532,32 @@ def app():
         combined_chart = line_chart_3 + average_reputation1 + average_rep_3
         st.altair_chart(combined_chart, use_container_width=True)
         
-        
-
     with row6_2:
         print("")
 
+
+    # Streamlit plotting
+    st.set_option('deprecation.showPyplotGlobalUse', False)
+
+    fig, ax1 = plt.subplots()
+
+    # Plot reputation on primary y-axis
+    ax1.plot(merged_df_2['Date'], merged_df_2['Scaled_Reputation'], 'b-', label='Reputation')
+    ax1.set_xlabel('Date')
+    ax1.set_ylabel('Reputation', color='b')
+    ax1.tick_params(axis='y', labelcolor='b')
+
+    # Create secondary y-axis for stock price
+    ax2 = ax1.twinx()
+    ax2.plot(merged_df_2['Date'], merged_df_2['Stock Price'], 'r-', label='Stock Price')
+    ax2.set_ylabel('Stock Price', color='r')
+    ax2.tick_params(axis='y', labelcolor='r')
+
+    # Add a title and show the plot
+    plt.title('Reputation and Stock Price Over Time')
+    fig.tight_layout()
+
+    st.pyplot(fig)
 
 if __name__ == "__main__":
     app()
