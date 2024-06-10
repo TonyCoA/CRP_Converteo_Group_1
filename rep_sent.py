@@ -16,6 +16,8 @@ from nltk.tokenize import word_tokenize
 import string
 from wordcloud import WordCloud, STOPWORDS
 
+from collections import defaultdict
+
 
 def app(): 
     # Load the dataset
@@ -382,23 +384,8 @@ def app():
         # Extract text
         data['cleaned_text'] = filtered_df['Text'].apply(clean_text)
 
-##################
-        # Preprocess text and calculate tone for each word
-        #text_data = filtered_merged_df[['Text', 'Tone']]
-        #text_data = text_data.dropna(subset=['Text', 'Tone'])  # Drop rows with missing 'Text' or 'Tone'
-
-        
-        
-        # Generate word cloud with tone coloring
-        #text = ' '.join(text_data['Text'].tolist())
-        #generate_wordcloud(text, color_func=color_func)
-
-
-##################
- 
         # Generate word cloud for keywords
         keywords_text = ' '.join(data['cleaned_text'].dropna().astype(str))
-        #generate_wordcloud(keywords_text)
         generate_wordcloud(keywords_text)
     
     with row4_2:
