@@ -96,11 +96,6 @@ def app():
     def scale_to_100(value):
         return ((value + 1) / 2) * 100
 
-    ##### --- CHECK
-    # Default values for start and end dates
-    default_start_date = pd.Timestamp.now().to_period('Y').start_time
-    default_end_date = pd.Timestamp.now()
-
     # Ensure the 'Date' column is in datetime format
     df['Date'] = pd.to_datetime(df['Date'], dayfirst=True) 
 
@@ -152,13 +147,12 @@ def app():
     row1_1, row1_2, row1_3, row1_4 = st.columns([0.3, 0.6, 0.3, 0.6])
     with row1_1:
         # Define the period list and default selected period
-        period_list = ['Week','Month', 'Trimester', 'Year']
+        period_list = ['Week','Month', 'Year']
         selected_period = st.selectbox('Select the period', period_list, index=0)  # Default to 'Day'
 
         date_mapping = {
             'Week': {'4 weeks': 4, '8 weeks': 8, '12 weeks': 12, '24 weeks': 24, '52 weeks': 52},
             'Month': {'3 months': 3, '4 months': 4, '6 months': 6, '9 months': 9, '12 months': 12},
-            'Trimester': {'1 trimester': 1, '2 trimesters': 2, '3 trimesters': 3, '4 trimesters': 4, '5 trimesters': 5},
             'Year': {'1 year': 1, '2 years': 2, '3 years': 3}
         }
 
@@ -172,11 +166,7 @@ def app():
         # Retrieve the value from the date_mapping based on the selected range
         selected_range_value = date_mapping[selected_period][selected_range]
 
-        ##### --- CHECK
-        # Get today's date and normalize it to the start of the day
-        now = pd.Timestamp.now()
-        
-        ##### --- CHECK
+        # Because we have the posts from 2022 until the last days of MArch, we have to use this date as the date of today
         #today = pd.Timestamp.today().normalize()
         today = pd.Timestamp('2024-03-27')
         end_today = pd.Timestamp('2024-03-27 23:59:59')
@@ -185,9 +175,6 @@ def app():
             start_date = today - pd.DateOffset(days=today.weekday())
         elif selected_period == 'Month':
             start_date = today.replace(day=1)
-        elif selected_period == 'Trimester':
-            quarter = (today.month - 1) // 3 + 1
-            start_date = pd.Timestamp(today.year, 3 * (quarter - 1) + 1, 1)
         elif selected_period == 'Year':
             start_date = today.replace(month=1, day=1)
 
@@ -202,7 +189,6 @@ def app():
             past_start_date = start_date - pd.DateOffset(weeks=selected_range_value)
         elif selected_period == 'Month':
             past_start_date = start_date - pd.DateOffset(months=selected_range_value)
-        ##### --- CHECK Trimester
         elif selected_period == 'Year':
             past_start_date = start_date - pd.DateOffset(years=selected_range_value)
         
@@ -212,15 +198,11 @@ def app():
 
     with row1_4:
         print("")
-        #st.write(past_start_date)
 
     row2_1, row2_2, row2_3 = st.columns([1, 1, 1])
     with row2_1:
         total_likes = filtered_df['X Likes'].sum()      # Calculate the sum of likes for the selected period
         past_total_likes = past_filtered_df['X Likes'].sum()        # Calculate the sum of likes for the past period
-        
-        ##### --- CHECK
-        delta_likes = total_likes - past_total_likes        # Calculate the difference in likes
         per_delta_likes = int(((total_likes - past_total_likes) / total_likes) * 100)
         
         st.metric(label='Interaction (Likes)', value=format_number(total_likes), delta=f'{per_delta_likes}%')
@@ -228,9 +210,6 @@ def app():
     with row2_2:
         total_eng = filtered_df['Engagement Actions'].sum()      # Calculate the sum of likes for the selected period
         past_total_eng = past_filtered_df['Engagement Actions'].sum()        # Calculate the sum of likes for the past period
-        
-        ##### --- CHECK
-        delta_eng = total_eng - past_total_eng        # Calculate the difference in likes
         per_delta_eng = int(((total_eng - past_total_eng) / total_eng) * 100)
 
         st.metric(label='Engagement Actions', value=format_number(total_eng), delta=f'{per_delta_eng}%')
@@ -238,7 +217,6 @@ def app():
     with row2_3:
         total_reach = filtered_df['Estimated reach'].sum()      # Calculate the sum of likes for the selected period
         past_total_reach = past_filtered_df['Estimated reach'].sum()        # Calculate the sum of likes for the past period
-        delta_reach = total_reach - past_total_reach        # Calculate the difference in likes
         per_delta_reach = int(((total_reach - past_total_reach) / total_reach) * 100)
 
         st.metric(label='Estimated Reach', value=format_number(total_reach), delta=f'{per_delta_reach}%')
@@ -248,7 +226,6 @@ def app():
     with row3_1:
         total_men = count_mentions(filtered_df['Mentions'])     # Calculate the total mentions for the selected period
         past_total_men = count_mentions(past_filtered_df['Mentions'])       # Calculate the total mentions for the past period
-        delta_men = total_men - past_total_men      # Calculate the difference in mentions
         per_delta_men = int(((total_men - past_total_men) / total_men) * 100)      # Calculate the percentage change
 
         st.metric(label='Mentions', value=format_number(total_men), delta=f'{per_delta_men}%')
@@ -256,7 +233,6 @@ def app():
     with row3_2:    
         total_re = filtered_df['X reposts'].count()      # Calculate the sum of likes for the selected period
         past_total_re = past_filtered_df['X reposts'].count()        # Calculate the sum of likes for the past period
-        delta_re = total_re - past_total_re        # Calculate the difference in likes
         per_delta_re = int(((total_re - past_total_re) / total_re) * 100)
 
         st.metric(label='Num. of Post & Repost', value=format_number(total_re), delta=f'{per_delta_re}%')
@@ -264,7 +240,6 @@ def app():
     with row3_3:
         total_imp = filtered_df['Impressions'].sum()      # Calculate the sum of likes for the selected period
         past_total_imp = past_filtered_df['Impressions'].sum()        # Calculate the sum of likes for the past period
-        delta_imp = total_imp - past_total_imp        # Calculate the difference in likes
         per_delta_imp = int(((total_imp - past_total_imp) / total_imp) * 100)
 
         st.metric(label='Impressions', value=format_number(total_imp), delta=f'{per_delta_imp}%')
@@ -287,9 +262,7 @@ def app():
 
 
     row4_1, row4_2, row4_3, row4_4 = st.columns([0.4, 0.4, 0.4, 0.4])
-    with row4_1:        # Filtro para grafica Score-Stock
-        # Date input for selecting the start 
-        #st_dt_st = st.date_input("Start date", value=default_start_date, min_value=min_date_start, max_value=max_date_start, key=5)
+    with row4_1:        # Filter for the Score-Stock plot
         # Initialize session state for start and end dates
         if 'start_date' not in st.session_state:
             st.session_state['start_date'] = pd.Timestamp.now().to_period('Y').start_time
@@ -322,16 +295,6 @@ def app():
 
         st.session_state['end_date'] = end_dt
 
-        # Date for max_value
-        #min_date_end = st_dt_st + pd.Timedelta(days=1)
-        #max_date_end = pd.Timestamp.now()
-        # Date input for selecting the end dates
-        #end_dt_st = st.date_input("End date", value=default_end_date, min_value=min_date_end, max_value=max_date_end, key=6)
-
-        # Filter the DataFrame based on the selected date range
-        #filtered_df_st = df[(df['Date'] >= pd.to_datetime(st_dt)) & (df['Date'] <= pd.to_datetime(end_dt))]
-        filtered_df_st = data[(data['Date'] >= pd.to_datetime(st_dt)) & (data['Date'] <= pd.to_datetime(end_dt))]
-
     with row4_4:
         print("")
 
@@ -340,14 +303,13 @@ def app():
     with row5_1:
         st.subheader("Reputation & Stock Price")
         
-        ###33333333333333333333333333333
         # Calculate the reputation indicator scores
         totalenergies_overall_reputation, totalenergies_daily_reputation = calculate_reputation_scores(data, 'TotalEnergies')
         
-        # Step 3: Group by the date part and calculate the mean of 'Compound_Sentiment_Score'
+        # Group by the date part and calculate the mean of 'Compound_Sentiment_Score'
         average_scores = data.groupby('Date_Only')['Compound_Sentiment_Score'].mean().reset_index()
 
-        # Step 4: Rename columns for clarity (optional)
+        # Rename columns for clarity (optional)
         average_scores.columns = ['Date', 'Average_Compound_Sentiment_Score']
 
         merged_df = pd.merge(totalenergies_daily_reputation, average_scores, on='Date', how='left')
@@ -358,9 +320,6 @@ def app():
         merged_df = merged_df.iloc[:-4]
 
         filtered_merged_st = merged_df[(merged_df['Date'] >= pd.to_datetime(st_dt)) & (merged_df['Date'] <= pd.to_datetime(end_dt))]
-
-        # Gauge chart Reputation Indicator
-        average_scaled_reputation = filtered_merged_st['Scaled_Reputation'].mean()      # Average of Reputation
            
 
         # Fetch stock price data from Yahoo Finance
@@ -388,11 +347,6 @@ def app():
         merged_df_2 = pd.merge(filtered_merged_st, stock_data_inter, on='Date', how='left')
 
 
-        ##### --- CHECK
-        # Merge stock data with the filtered dataframe on the 'Date' column
-        #filtered_df_ch = filtered_df_st.set_index('Date')
-        #combined_df = filtered_df_st.join(stock_data, how='inner')
-
         # Values from datasets
         dates_st = merged_df_2['Date']
         data1_st = merged_df_2['Scaled_Reputation']
@@ -415,7 +369,6 @@ def app():
         line_chart_2 = alt.Chart(df_melted_st).mark_line().encode(
             x='Date:T',
             y='Score:Q',
-            #color='Series:N'
             color=alt.Color('Series:N', scale=color_scale_2)
         ).properties(
             width=600,
@@ -455,13 +408,12 @@ def app():
     with row6_1:
         st.subheader("Total Energies vs. Chevron")
 
-        ###33333333333333333333333333333
         # Calculate the reputation scores
         chevron_overall_reputation, chevron_daily_reputation = calculate_reputation_scores(combined_data, 'Chevron')
 
-        # Step 3: Group by the date part and calculate the mean of 'Compound_Sentiment_Score'
+        # Group by the date part and calculate the mean of 'Compound_Sentiment_Score'
         average_scores2 = data2.groupby('Date_Only')['Compound_Sentiment_Score'].mean().reset_index()
-        # Step 4: Rename columns for clarity (optional)
+        # Rename columns for clarity (optional)
         average_scores2.columns = ['Date', 'Average_Compound_Sentiment_Score2']
         merged_df2 = pd.merge(totalenergies_daily_reputation, average_scores2, on='Date', how='left')
 
@@ -490,7 +442,7 @@ def app():
         # Define the color scale
         color_scale_3 = alt.Scale(
             domain=['Total - Reputation Indicator', 'Chevron - Reputation Indicator'],
-            range=['#2C73D2', '#c72118']  # Both series will be green
+            range=['#2C73D2', '#c72118']  # Color for series 
         )
 
         # Create Altair line chart with custom colors
