@@ -1,11 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
 import matplotlib.pyplot as plt
-import plotly.colors as pc
 import plotly.graph_objects as go
-from streamlit_datetime_range_picker import datetime_range_picker
 import altair as alt
 
 import spacy
@@ -16,30 +13,20 @@ from mlxtend.preprocessing import TransactionEncoder
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from collections import Counter
 import string
 from wordcloud import WordCloud, STOPWORDS
-import matplotlib.pyplot as plt
 
 
 def app(): 
     # Load the dataset
     df = pd.read_csv("datasets/2024Q1_TE2.csv")
-    ###33333333333333333333333333333
     data = pd.read_csv("datasets/data_senti_TE.csv")
     data2 = pd.read_csv("datasets/data_senti_chevron.csv")
-    # Combine TE and Chevron
-    combined_data = pd.concat([data, data2], ignore_index=True)
-
-    # Load NLP model
-    #nlp = spacy.load('en_core_web_sm')
-
-    # Basic Graphs (Introduction)
-    st.title("Reputation & Sentiment")
+    combined_data = pd.concat([data, data2], ignore_index=True)     # Combine TE and Chevron
         
     ##############################################################
     # FUNCTIONS
-    # Gauge Chart
+    # Define gauge chart
     def gauge(gVal, gTitle="", gMode='gauge+number', gSize="MED", gTheme="Black",
             grLow=35, grMid=55, gcLow='#FF1708', gcMid='#FF9400', 
             gcHigh='#1B8720', xpLeft=0, xpRight=1, ypBot=0, ypTop=1, 
@@ -107,7 +94,7 @@ def app():
             **{'config':config}
         )
 
-    ###33333333333333333333333333333
+    # Define function to calculate reputation score 
     def calculate_reputation_scores(data, query_name,window=7):
         overall_posk = 0
         overall_negk = 0
@@ -167,8 +154,7 @@ def app():
     def scale_to_100(value):
         return ((value + 1) / 2) * 100
 
-    ###444444444444444444444444444444
-    # Function to generate word cloud
+    # Define function to generate word cloud
     def generate_wordcloud(text):
         wordcloud = WordCloud(width=800, height=400, background_color='white', colormap='viridis', stopwords=STOPWORDS).generate(text)
         plt.figure(figsize=(10, 5))
@@ -178,6 +164,7 @@ def app():
     
     stop_words = set(stopwords.words('english'))
 
+    # Define function to clean text
     def clean_text(text):
         if isinstance(text, str):
             text = text.lower()
@@ -188,18 +175,24 @@ def app():
             return ' '.join(words)
         return ''
 
+    # Download stopwords if not already done
+    nltk.download('stopwords')
+    nltk.download('punkt')
+
+
     # Default values for start and end dates
     default_start_date = pd.Timestamp.now().to_period('Y').start_time
     default_end_date = pd.Timestamp.now()
 
-    # Ensure the 'Date' column is in datetime format
-    df['Date'] = pd.to_datetime(df['Date'], dayfirst=True) 
+
 
     # Date for min_value 
     min_date_start = pd.Timestamp('2022-01-01')
     max_date_start = pd.Timestamp.now() - pd.Timedelta(days=1)
 
-    ###33333333333333333333333333333
+    # Ensure the 'Date' column is in datetime format
+    df['Date'] = pd.to_datetime(df['Date'], dayfirst=True) 
+
     # Change the date to datetime
     combined_data['Date'] = pd.to_datetime(combined_data['Date'])
     # Change the date to datetime for data of TE
@@ -207,15 +200,8 @@ def app():
     # Extract the date part (ignore the time part)
     data['Date_Only'] = data['Date'].dt.date
 
-    ###33333333333333333333333333333
     # Apply the function to get the weights of combined data
     combined_data = calculate_tweet_weights(combined_data)
-
-    ###444444444
-    # Download stopwords if not already done
-    nltk.download('stopwords')
-    nltk.download('punkt')
-
 
     #############################################################
 
@@ -238,6 +224,8 @@ def app():
 
 
     # Main Panel 1
+    st.title("Reputation & Sentiment")
+
     row1_1, row1_2, row1_3, row1_4, row1_5 = st.columns([0.4, 0.2, 0.5, 0.2, 0.5])
     with row1_1:        # Filtro para grafica Score-Rep
         # Initialize session state for start and end dates
@@ -326,7 +314,7 @@ def app():
 
         df_x = pd.DataFrame({'Date': dates, 'Reputation Score': data1_2, 'Sentiment Score': data2_2})
         # Melt the DataFrame to long format
-        df_melted = df_x.melt('Date', var_name='Series', value_name='Value')
+        df_melted = df_x.melt('Date', var_name='Series', value_name='Score')
 
         # Calculate the average values
         avg_reputation = data1_2.mean()
@@ -343,7 +331,7 @@ def app():
         # Create Altair line chart with custom colors
         line_chart = alt.Chart(df_melted).mark_line().encode(
             x='Date:T',
-            y='Value:Q',
+            y='Score:Q',
             color=alt.Color('Series:N', scale=color_scale_1)
         ).properties(
             width=600,
@@ -356,10 +344,10 @@ def app():
             'Scaled_Reputation': [avg_reputation, avg_reputation]
         })).transform_fold(
             ['Scaled_Reputation'],
-            as_=['Series', 'Value']
+            as_=['Series', 'Score']
         ).mark_line(strokeDash=[5,5], color='#5c57f7').encode(
             x='Date:T',
-            y='Value:Q',
+            y='Score:Q',
             opacity=alt.value(0.4)
         )
 
@@ -369,10 +357,10 @@ def app():
             'Scaled_Average_Compound_Sentiment_Score': [avg_sentiment, avg_sentiment]
         })).transform_fold(
             ['Scaled_Average_Compound_Sentiment_Score'],
-            as_=['Series', 'Value']
+            as_=['Series', 'Score']
         ).mark_line(strokeDash=[5,5], color='#fa544b').encode(
             x='Date:T',
-            y='Value:Q',
+            y='Score:Q',
             opacity=alt.value(0.4)
         )
 

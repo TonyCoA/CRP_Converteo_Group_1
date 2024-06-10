@@ -7,8 +7,7 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 
 # Import other pages
-import rep_sent, brand_kpi
-#, competitors
+import rep_sent, brand_kpi, competitors
 
 st.set_page_config(
     page_title="Reputation Analysis - TotalEnergies",
@@ -35,9 +34,11 @@ class MultiApp:
             app = option_menu(
                 menu_title='Reputation Analysis Tool',
                 # Names of the pages in the menu
-                options=['Repuation & Sentiment', 'Brand KPIs', 'Competitors Info'],
+                options=['Repuation & Sentiment', 'Brand KPIs'],
+                         #, 'Competitors Info'],
                 # Icons of the pages
-                icons=['person-circle', 'trophy-fill', 'info-circle-fill'],
+                icons=['person-circle', 'trophy-fill'],
+                       #, 'info-circle-fill'],
                 menu_icon='chat-text-fill',
                 default_index=0
             )

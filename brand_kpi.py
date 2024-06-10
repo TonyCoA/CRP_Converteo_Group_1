@@ -14,6 +14,9 @@ def app():
     # Load the dataset
     df = pd.read_csv("datasets/2024Q1_TE2.csv")
     data = pd.read_csv("datasets/data_senti_TE.csv")
+    data2 = pd.read_csv("datasets/data_senti_chevron.csv")
+    # Combine TE and Chevron
+    combined_data = pd.concat([data, data2], ignore_index=True)
 
     # Basic Graphs (Introduction)
     st.title("Brand KPIs")
@@ -107,12 +110,21 @@ def app():
     max_date_start = pd.Timestamp.now() - pd.Timedelta(days=1)
 
     ###33333333333333333333333333333
+    # Change the date to datetime
+    combined_data['Date'] = pd.to_datetime(combined_data['Date'])
     # Change the date to datetime for data of TE
     data['Date'] = pd.to_datetime(data['Date'])
     # Extract the date part (ignore the time part)
     data['Date_Only'] = data['Date'].dt.date
     # Apply the function to get the weights of combined data
     data = calculate_tweet_weights(data)
+
+    # Change the date to datetime for data of Chevron
+    data2['Date'] = pd.to_datetime(data2['Date'])
+    # Extract the date part (ignore the time part)
+    data2['Date_Only'] = data2['Date'].dt.date
+    # Apply the function to get the weights of combined data
+    combined_data = calculate_tweet_weights(combined_data)
 
     #############################################################
 
@@ -382,7 +394,7 @@ def app():
         #df_x_st = pd.DataFrame({'Date': dates_st, 'Stock Price': data2_st})
         
         # Melt the DataFrame to long format
-        df_melted_st = df_x_st.melt('Date', var_name='Series', value_name='Value')
+        df_melted_st = df_x_st.melt('Date', var_name='Series', value_name='Score')
 
         # Calculate the average values
         avg_reputation = data1_st.mean()
@@ -396,7 +408,7 @@ def app():
         # Create Altair line chart
         line_chart_2 = alt.Chart(df_melted_st).mark_line().encode(
             x='Date:T',
-            y='Value:Q',
+            y='Score:Q',
             #color='Series:N'
             color=alt.Color('Series:N', scale=color_scale_2)
         ).properties(
@@ -410,10 +422,10 @@ def app():
             'Scaled_Reputation': [avg_reputation, avg_reputation]
         })).transform_fold(
             ['Scaled_Reputation'],
-            as_=['Series', 'Value']
+            as_=['Series', 'Score']
         ).mark_line(strokeDash=[5,5], color='#5c57f7').encode(
             x='Date:T',
-            y='Value:Q',
+            y='Score:Q',
             opacity=alt.value(0.4)
         )
 
@@ -433,17 +445,89 @@ def app():
         print("")
 
 
-    row53, row54 = st.columns([1, 1])
-    with row53:
-        print("")
-
-    with row54:
-        print("")
-
-
     row6_1, row6_2 = st.columns([1, 0.01])
     with row6_1:
         st.subheader("Total Energies vs. Chevron")
+
+        ###33333333333333333333333333333
+        # Calculate the reputation scores
+        chevron_overall_reputation, chevron_daily_reputation = calculate_reputation_scores(combined_data, 'Chevron')
+
+        # Step 3: Group by the date part and calculate the mean of 'Compound_Sentiment_Score'
+        average_scores2 = data2.groupby('Date_Only')['Compound_Sentiment_Score'].mean().reset_index()
+        # Step 4: Rename columns for clarity (optional)
+        average_scores2.columns = ['Date', 'Average_Compound_Sentiment_Score2']
+        merged_df2 = pd.merge(totalenergies_daily_reputation, average_scores2, on='Date', how='left')
+
+
+        # Apply the function to the 'Reputation' and 'Average_Compound_Sentiment_Score' columns
+        merged_df2['Scaled_Reputation_2'] = chevron_daily_reputation['Reputation'].apply(scale_to_100)
+        merged_df2 = merged_df2.iloc[:-4]
+
+        filtered_merged_df2 = merged_df2[(merged_df2['Date'] >= pd.to_datetime(st_dt)) & (merged_df2['Date'] <= pd.to_datetime(end_dt))]
+
+        # Values from datasets -- capacidad maxima de 3 meses       
+        dates = filtered_merged_st['Date']
+        data1_2 = filtered_merged_st['Scaled_Reputation']
+        data2_2 = filtered_merged_df2['Scaled_Reputation_2']
+
+        df_x = pd.DataFrame({'Date': dates, 'Total - Reputation Score': data1_2, 'Chevron - Reputation Score': data2_2})
+        # Melt the DataFrame to long format
+        df_melted = df_x.melt('Date', var_name='Series', value_name='Score')
+
+        # Calculate the average values
+        avg_reputation1 = data1_2.mean()
+        #average_scaled_reputation
+        avg_reputation2 = data2_2.mean()
+
+
+        # Define the color scale
+        color_scale_3 = alt.Scale(
+            domain=['Total - Reputation Score', 'Chevron - Reputation Score'],
+            range=['#2C73D2', '#c72118']  # Both series will be green
+        )
+
+        # Create Altair line chart with custom colors
+        line_chart_3 = alt.Chart(df_melted).mark_line().encode(
+            x='Date:T',
+            y='Score:Q',
+            color=alt.Color('Series:N', scale=color_scale_3)
+        ).properties(
+            width=600,
+            height=400
+        )
+
+        # Create lines for the average of Reputation
+        average_reputation1 = alt.Chart(pd.DataFrame({
+            'Date': [dates.min(), dates.max()],
+            'Scaled_Reputation': [avg_reputation1, avg_reputation1]
+        })).transform_fold(
+            ['Scaled_Reputation'],
+            as_=['Series', 'Score']
+        ).mark_line(strokeDash=[5,5], color='#5c57f7').encode(
+            x='Date:T',
+            y='Score:Q',
+            opacity=alt.value(0.4)
+        )
+
+        # Create lines for the average of Sentiment
+        average_rep_3 = alt.Chart(pd.DataFrame({
+            'Date': [dates.min(), dates.max()],
+            'Scaled_Reputation_2': [avg_reputation2, avg_reputation2]
+        })).transform_fold(
+            ['Scaled_Reputation_2'],
+            as_=['Series', 'Score']
+        ).mark_line(strokeDash=[5,5], color='#fa544b').encode(
+            x='Date:T',
+            y='Score:Q',
+            opacity=alt.value(0.4)
+        )
+
+
+        # Combine the original line chart and the average lines
+        combined_chart = line_chart_3 + average_reputation1 + average_rep_3
+        st.altair_chart(combined_chart, use_container_width=True)
+        
         
 
     with row6_2:
